@@ -1,27 +1,19 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { FOTOS, LINKS } from '../data'
 import { Titulo, Surge, Rotulo } from './ui'
-import { WorksWheel } from '@/components/ui/works-wheel'
+import { Component as ImageAutoSlider } from '@/components/ui/image-auto-slider'
 
-/* Cortes e cor que vão para a roda, com um nome curto que descreve a própria foto. */
-const NOMES = {
-  'crazy-color-perfil': 'Fogo de perfil',
-  'crazy-color-sorriso': 'Franja em laranja',
-  'crazy-color-lateral': 'Nuca e degradê',
-  'crazy-color-olhar': 'Topete espetado',
-  'crazy-color-tres-quartos': 'Lateral raspada',
-  'crazy-color-palco': 'Vermelho e rosa',
-  'palco-contraluz': 'Contraluz',
-  'crazy-color-pb': 'Preto e branco',
-}
+/* Fotos de corte e cor que passam no carrossel. */
+const CORTES_IDS = [
+  'crazy-color-perfil', 'crazy-color-sorriso', 'crazy-color-lateral', 'crazy-color-olhar',
+  'crazy-color-tres-quartos', 'crazy-color-palco', 'palco-contraluz', 'crazy-color-pb',
+]
 const nome = (f) => f.src.split('/').pop().replace('.jpg', '')
-const CORTES = FOTOS.filter((f) => NOMES[nome(f)])
-const RODA = CORTES.map((f) => ({ title: NOMES[nome(f)], image: f.src, alt: f.alt }))
+const CORTES = FOTOS.filter((f) => CORTES_IDS.includes(nome(f)))
 /* O resto: o salão, o palco e o Piolho. */
-const CASA = FOTOS.filter((f) => !NOMES[nome(f)])
+const CASA = FOTOS.filter((f) => !CORTES_IDS.includes(nome(f)))
 
 export default function Fotos({ abrir }) {
-  const [ativo, setAtivo] = useState(0)
   const abrirCorte = useCallback((i) => abrir(CORTES, i), [abrir])
 
   return (
@@ -42,32 +34,23 @@ export default function Fotos({ abrir }) {
           </div>
         </div>
 
-        {/* roda dos cortes */}
-        <div className="mt-16 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <Rotulo>Cortes e cor</Rotulo>
-            <p className="mt-3 mb-0 max-w-[32em] text-parede/65">
-              Gire a rodinha, arraste para cima ou use as setas para passar os trabalhos. Toque na foto da frente para ampliar.
-            </p>
-          </div>
-          <p className="m-0 font-serif text-[1.125rem] italic text-parede/60" aria-hidden="true">
-            {String(ativo + 1).padStart(2, '0')} <span className="text-parede/30">/ {String(RODA.length).padStart(2, '0')}</span>
+        {/* carrossel dos cortes */}
+        <div className="mt-16">
+          <Rotulo>Cortes e cor</Rotulo>
+          <p className="mt-3 mb-0 max-w-[32em] text-parede/65">
+            Trabalhos de corte e cor feitos na Piolho. Toque numa foto para ampliar.
           </p>
         </div>
-        <Surge className="mt-6">
-          <WorksWheel
-            items={RODA}
-            label="Cortes & cor"
-            action="Ampliar"
-            onActiveChange={setAtivo}
-            onOpen={abrirCorte}
-            className="h-[min(84svh,760px)] rounded-[28px] bg-tinta bg-[radial-gradient(60%_70%_at_50%_50%,rgba(91,17,25,.45)_0%,transparent_70%)] font-serif ring-1 ring-parede/10 max-sm:h-[62svh]"
+        <Surge className="mt-4">
+          <ImageAutoSlider
+            images={CORTES}
+            duration={40}
+            onSelect={abrirCorte}
+            selectLabel="Ampliar foto"
+            className="bg-transparent"
           />
         </Surge>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <button type="button" onClick={() => abrirCorte(ativo)} className="btn btn-claro">
-            Ampliar esta foto
-          </button>
+        <div className="mt-2 flex flex-wrap items-center justify-end gap-3">
           <a href={LINKS.instagram} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center font-semibold underline decoration-coral decoration-2 underline-offset-4 hover:text-coral">
             Mais trabalhos no Instagram
           </a>

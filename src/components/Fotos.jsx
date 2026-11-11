@@ -1,22 +1,28 @@
-import { useEffect, useMemo, useState } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
-import { FOTOS, GRUPOS_FOTO, LINKS } from '../data'
-import { Titulo, Surge, EASE } from './ui'
+import { useCallback, useState } from 'react'
+import { FOTOS, LINKS } from '../data'
+import { Titulo, Surge, Rotulo } from './ui'
+import { WorksWheel } from '@/components/ui/works-wheel'
+
+/* Cortes e cor que vão para a roda, com um nome curto que descreve a própria foto. */
+const NOMES = {
+  'crazy-color-perfil': 'Fogo de perfil',
+  'crazy-color-sorriso': 'Franja em laranja',
+  'crazy-color-lateral': 'Nuca e degradê',
+  'crazy-color-olhar': 'Topete espetado',
+  'crazy-color-tres-quartos': 'Lateral raspada',
+  'crazy-color-palco': 'Vermelho e rosa',
+  'palco-contraluz': 'Contraluz',
+  'crazy-color-pb': 'Preto e branco',
+}
+const nome = (f) => f.src.split('/').pop().replace('.jpg', '')
+const CORTES = FOTOS.filter((f) => NOMES[nome(f)])
+const RODA = CORTES.map((f) => ({ title: NOMES[nome(f)], image: f.src, alt: f.alt }))
+/* O resto: o salão, o palco e o Piolho. */
+const CASA = FOTOS.filter((f) => !NOMES[nome(f)])
 
 export default function Fotos({ abrir }) {
-  const reduz = useReducedMotion()
-  const [grupo, setGrupo] = useState('todas')
-  const [tudo, setTudo] = useState(false)
-  const lista = useMemo(() => FOTOS.filter((f) => grupo === 'todas' || f.grupo === grupo), [grupo])
-  // no celular a grade começa com 6 fotos para não virar um corredor sem fim
-  const [estreito, setEstreito] = useState(() => window.matchMedia('(max-width: 767px)').matches)
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)')
-    const f = (e) => setEstreito(e.matches)
-    mq.addEventListener('change', f)
-    return () => mq.removeEventListener('change', f)
-  }, [])
-  const visiveis = estreito && !tudo ? lista.slice(0, 6) : lista
+  const [ativo, setAtivo] = useState(0)
+  const abrirCorte = useCallback((i) => abrir(CORTES, i), [abrir])
 
   return (
     <section id="fotos" aria-labelledby="fotos-titulo" className="em-cor bg-carvao py-[clamp(72px,10vw,140px)] text-parede">
@@ -36,51 +42,52 @@ export default function Fotos({ abrir }) {
           </div>
         </div>
 
-        {/* filtros */}
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-4">
-          <div role="group" aria-label="Filtrar fotos" className="flex flex-wrap gap-1 rounded-full bg-white/8 p-1">
-            {GRUPOS_FOTO.map((g) => {
-              const ativo = grupo === g.id
-              const qtd = g.id === 'todas' ? FOTOS.length : FOTOS.filter((f) => f.grupo === g.id).length
-              return (
-                <button key={g.id} type="button" aria-pressed={ativo} onClick={() => setGrupo(g.id)}
-                  className={`relative inline-flex min-h-11 items-center gap-2 rounded-full px-4 font-semibold transition-colors ${ativo ? 'text-tinta' : 'text-parede hover:bg-white/10'}`}>
-                  {ativo && <motion.span layoutId="filtro-ativo" aria-hidden="true" className="absolute inset-0 rounded-full bg-brilho" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
-                  <span className="relative">{g.rotulo}</span>
-                  <span className={`relative text-[.8125rem] ${ativo ? 'text-tinta/70' : 'text-parede/50'}`}>{qtd}</span>
-                </button>
-              )
-            })}
+        {/* roda dos cortes */}
+        <div className="mt-16 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <Rotulo>Cortes e cor</Rotulo>
+            <p className="mt-3 mb-0 max-w-[32em] text-parede/65">
+              Gire a rodinha, arraste para cima ou use as setas para passar os trabalhos. Toque na foto da frente para ampliar.
+            </p>
           </div>
-          <p className="m-0 text-sm text-parede/60" aria-live="polite">{lista.length} fotos · toque para ampliar</p>
+          <p className="m-0 font-serif text-[1.125rem] italic text-parede/60" aria-hidden="true">
+            {String(ativo + 1).padStart(2, '0')} <span className="text-parede/30">/ {String(RODA.length).padStart(2, '0')}</span>
+          </p>
+        </div>
+        <Surge className="mt-6">
+          <WorksWheel
+            items={RODA}
+            label="Cortes & cor"
+            action="Ampliar"
+            onActiveChange={setAtivo}
+            onOpen={abrirCorte}
+            className="h-[min(84svh,760px)] rounded-[28px] bg-tinta bg-[radial-gradient(60%_70%_at_50%_50%,rgba(91,17,25,.45)_0%,transparent_70%)] font-serif ring-1 ring-parede/10 max-sm:h-[62svh]"
+          />
+        </Surge>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <button type="button" onClick={() => abrirCorte(ativo)} className="btn btn-claro">
+            Ampliar esta foto
+          </button>
+          <a href={LINKS.instagram} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center font-semibold underline decoration-coral decoration-2 underline-offset-4 hover:text-coral">
+            Mais trabalhos no Instagram
+          </a>
         </div>
 
-        {/* grade que se reorganiza ao filtrar */}
-        <motion.ul layout={!reduz} className="mt-6 grid grid-flow-dense grid-cols-2 gap-3 [grid-auto-rows:clamp(80px,22vw,170px)] md:grid-cols-4 md:[grid-auto-rows:clamp(80px,11vw,150px)] lg:grid-cols-6 lg:[grid-auto-rows:clamp(80px,7.4vw,112px)]">
-          <AnimatePresence mode="popLayout" initial={false}>
-            {visiveis.map((f) => {
-              const i = FOTOS.indexOf(f)
-              return (
-                <motion.li key={f.src} layout={!reduz}
-                  initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.45, ease: EASE }}
-                  className={`${f.larga ? 'col-span-2' : ''} row-span-2`}>
-                  <button type="button" onClick={(e) => abrir(lista, lista.indexOf(f), e.currentTarget)}
-                    aria-label={`Ampliar foto: ${f.alt}`}
-                    className="foto group relative block h-full w-full cursor-zoom-in" style={{ borderRadius: 18 }}>
-                    <img src={f.src} alt="" loading="lazy" className="group-hover:scale-[1.05] group-focus-visible:scale-[1.05]" data-i={i} />
-                    <span aria-hidden="true" className="absolute bottom-3 right-3 grid size-10 place-items-center rounded-full bg-parede text-xl font-bold text-tinta opacity-0 transition duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:opacity-100 [@media(hover:none)]:size-8">+</span>
-                  </button>
-                </motion.li>
-              )
-            })}
-          </AnimatePresence>
-        </motion.ul>
-        {estreito && !tudo && lista.length > 6 && (
-          <button type="button" onClick={() => setTudo(true)} className="btn btn-claro mt-4 w-full">
-            Mostrar mais {lista.length - 6} fotos
-          </button>
-        )}
+        {/* a casa */}
+        <div className="mt-20">
+          <Rotulo>Por dentro da casa</Rotulo>
+          <ul className="mt-6 grid grid-cols-2 gap-3 [grid-auto-rows:clamp(120px,40vw,220px)] md:grid-cols-4 md:[grid-auto-rows:clamp(140px,18vw,240px)]">
+            {CASA.map((f, i) => (
+              <li key={f.src} className={f.larga ? 'col-span-2' : ''}>
+                <button type="button" onClick={() => abrir(CASA, i)} aria-label={`Ampliar foto: ${f.alt}`}
+                  className="foto group relative block h-full w-full cursor-zoom-in" style={{ borderRadius: 18 }}>
+                  <img src={f.src} alt="" loading="lazy" className="group-hover:scale-[1.04] group-focus-visible:scale-[1.04]" />
+                  <span aria-hidden="true" className="absolute bottom-3 right-3 grid size-10 place-items-center rounded-full bg-parede text-xl font-bold text-tinta opacity-0 transition duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:size-8 [@media(hover:none)]:opacity-100">+</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <div className="mt-10 grid items-center gap-6 md:grid-cols-[auto_minmax(0,1fr)]">
           <div className="foto aspect-[9/14] w-full max-w-[260px] bg-black" style={{ borderRadius: 18 }}>

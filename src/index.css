@@ -16,6 +16,12 @@
   --color-coral: #ff8a6b;
   --color-brilho: #f6c7b4;
 
+  /* tokens no padrão shadcn (componentes em src/components/ui), na paleta da casa */
+  --color-background: #1d1416;
+  --color-foreground: #f4eee7;
+  --color-muted: #140e0f;
+  --color-muted-foreground: rgb(244 238 231 / .5);
+
   --font-sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
 

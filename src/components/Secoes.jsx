@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
-import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion, useMotionValue, useSpring, useMotionTemplate, useMotionValueEvent } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion, useMotionValue, useSpring, useMotionTemplate, useMotionValueEvent, useInView } from 'motion/react'
 import { CTA, LINKS, HORARIOS, ENDERECO } from '../data'
 import { Titulo, Surge, Rotulo, Check, EASE, useHoje, Seta } from './ui'
 import { Marca, IconeWhats, IconeInstagram } from './Header'
+import AdmitOneTicket, { TICKET_LAYOUT, TICKET_TEXTURE } from '@/components/ui/admit-one-ticket'
 
 const vidro = 'rounded-[28px] border border-parede/10 bg-parede/[.04] backdrop-blur-xl'
 
@@ -79,52 +80,59 @@ export function Protese() {
   )
 }
 
-/* Planos: um "cartão de membro" que reage ao ponteiro, com só o que é confirmado. */
+/* Planos: um ingresso "da casa" com granulado animado, só com o que é confirmado. */
+const TINTA_INGRESSO = {
+  ...TICKET_LAYOUT,
+  inkColor: '#f4eee7',
+  watermarkColor: '#ff8a6b',
+  watermarkOpacity: 0.18,
+  stubOpacity: 0.92,
+}
+const GRAO = {
+  ...TICKET_TEXTURE,
+  colorBack: '#5b1119',
+  colorFront: '#c8261a',
+  colorHighlight: '#ff8a6b',
+  speed: 0.35,
+}
+const GRAO_PARADO = { ...GRAO, speed: 0 }
+
 function CartaoPlano() {
-  const reduz = useReducedMotion()
-  const rx = useMotionValue(0)
-  const ry = useMotionValue(0)
-  const srx = useSpring(rx, { stiffness: 150, damping: 18 })
-  const sry = useSpring(ry, { stiffness: 150, damping: 18 })
-  const bx = useMotionValue(30)
-  const by = useMotionValue(20)
-  const brilho = useMotionTemplate`radial-gradient(420px circle at ${bx}% ${by}%, rgba(255,214,196,.28), transparent 55%)`
-  function move(e) {
-    if (reduz || e.pointerType !== 'mouse') return
-    const r = e.currentTarget.getBoundingClientRect()
-    const x = (e.clientX - r.left) / r.width
-    const y = (e.clientY - r.top) / r.height
-    ry.set((x - 0.5) * 16); rx.set((0.5 - y) * 12)
-    bx.set(x * 100); by.set(y * 100)
-  }
+  const caixa = useRef(null)
+  const [largura, setLargura] = useState(0)
+  // o shader só gira enquanto o ingresso está na tela
+  const visivel = useInView(caixa, { amount: 0.1 })
+  useEffect(() => {
+    const el = caixa.current
+    if (!el) return
+    const ler = () => setLargura(Math.min(el.clientWidth, 560))
+    ler()
+    const ro = new ResizeObserver(ler)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   return (
-    <div className="[perspective:1200px]" onPointerMove={move} onPointerLeave={() => { rx.set(0); ry.set(0) }}>
-      <motion.div style={reduz ? undefined : { rotateX: srx, rotateY: sry }}
+    // contain: a largura da caixa vem da coluna, nunca do ingresso que está dentro dela
+    <div ref={caixa} className="w-full min-w-0 [contain:inline-size]">
+      <motion.div
+        role="img" aria-label="Ingresso do plano mensal da Piolho: cortes ilimitados, para quem é da casa, valor sob consulta."
         initial={{ opacity: 0, y: 40, rotate: -4 }} whileInView={{ opacity: 1, y: 0, rotate: 0 }} viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="relative mx-auto aspect-[1.586] w-full max-w-[480px] overflow-hidden rounded-[26px] border border-parede/15 bg-[linear-gradient(135deg,#7a1622_0%,#4a0e16_45%,#1d0a0e_100%)] p-[clamp(20px,3vw,32px)] shadow-[0_50px_90px_-35px_rgba(0,0,0,.9)]">
-        {/* linhas finas, no mesmo traço do círculo do hero */}
-        <svg aria-hidden="true" viewBox="0 0 200 126" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice">
-          <circle cx="170" cy="20" r="70" fill="none" stroke="rgba(246,199,180,.22)" strokeWidth=".4" />
-          <circle cx="170" cy="20" r="48" fill="none" stroke="rgba(246,199,180,.14)" strokeWidth=".4" />
-        </svg>
-        <motion.div aria-hidden="true" className="absolute inset-0" style={{ background: brilho }} />
-        <div className="relative flex h-full flex-col justify-between">
-          <div className="flex items-start justify-between">
-            <span className="leading-none">
-              <span className="block font-serif text-[clamp(1.6rem,3vw,2.1rem)] italic">Piolho<span className="not-italic text-coral">.</span></span>
-              <span className="mt-1 block text-[.55rem] font-semibold uppercase tracking-[.42em] text-parede/55">barber shop</span>
-            </span>
-            <span className="etiqueta rounded-full border border-parede/20 px-3 py-1 text-[.625rem] text-parede/80">Plano mensal</span>
-          </div>
-          <div>
-            <p className="m-0 font-serif text-[clamp(1.5rem,3.2vw,2.25rem)] leading-none tracking-[-.02em]">Cortes <em className="text-brilho">ilimitados</em></p>
-            <div className="mt-4 flex items-end justify-between gap-4 text-[.75rem] uppercase tracking-[.2em] text-parede/55">
-              <span>Para quem é da casa</span>
-              <span className="text-parede/80">Valor sob consulta</span>
-            </div>
-          </div>
-        </div>
+        className="mx-auto w-fit font-sans [font-stretch:80%] drop-shadow-[0_40px_50px_rgba(0,0,0,.55)]">
+        {largura > 0 && (
+          <AdmitOneTicket
+            name="Cortes ilimitados"
+            presenter="Piolho Barber Shop"
+            event="Plano mensal"
+            venue="Vila Baependi"
+            dates="Valor sob consulta"
+            stubText="Da casa"
+            watermark="∞"
+            width={largura}
+            layout={TINTA_INGRESSO}
+            texture={visivel ? GRAO : GRAO_PARADO}
+          />
+        )}
       </motion.div>
     </div>
   )

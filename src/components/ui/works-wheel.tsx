@@ -327,7 +327,12 @@ export function WorksWheel({
             y: event.clientY,
             card: card ? Number(card.dataset.wheelI) : -1,
           };
-          event.currentTarget.setPointerCapture(event.pointerId);
+          // Piolho: alguns navegadores recusam a captura (ponteiro já solto)
+          try {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } catch {
+            /* segue sem captura */
+          }
         }}
         onPointerMove={(event) => {
           if (drag.current === null) return;

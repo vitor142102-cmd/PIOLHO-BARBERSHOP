@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.vercel/
+.claude/
+.taste-skill/
+_versao-estatica/
+*.log
+.DS_Store
+Thumbs.db

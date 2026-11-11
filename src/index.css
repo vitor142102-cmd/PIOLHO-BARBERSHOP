@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/* Paleta "cadeira vermelha": o vermelho das cadeiras da Piolho escurecido até o vinho,
+   sobre carvão quente e osso. Um coral claro faz os destaques — nada de dourado. */
+@theme {
+  --color-parede: #f4eee7;
+  --color-papel: #fbf8f4;
+  --color-areia: #eadfd3;
+  --color-tinta: #140e0f;
+  --color-carvao: #1d1416;
+  --color-cinza: #6a5d5a;
+  --color-vermelho: #c8261a;
+  --color-vermelho-escuro: #9c1b12;
+  --color-vinho: #5b1119;
+  --color-vinho-escuro: #330a10;
+  --color-coral: #ff8a6b;
+  --color-brilho: #f6c7b4;
+
+  --font-sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
+
+  --ease-solto: cubic-bezier(.2, .7, .2, 1);
+}
+
+:root {
+  --topo-h: 68px;
+  --gutter: clamp(16px, 4vw, 56px);
+  --max: 1320px;
+}
+
+@layer base {
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topo-h) + 8px); -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    background: var(--color-parede); color: var(--color-tinta);
+    font-family: var(--font-sans); font-stretch: 100%; font-size: 1.0625rem; line-height: 1.6;
+    -webkit-font-smoothing: antialiased; overflow-x: clip;
+  }
+  :focus-visible { outline: 3px solid var(--color-vermelho); outline-offset: 3px; border-radius: 4px; }
+  .em-cor :focus-visible { outline-color: var(--color-coral); }
+  img, video { display: block; max-width: 100%; }
+  ::selection { background: var(--color-brilho); color: var(--color-tinta); }
+}
+
+@layer components {
+  .wrap { width: 100%; max-width: calc(var(--max) + var(--gutter) * 2); margin-inline: auto; padding-inline: var(--gutter); }
+
+  /* títulos: Fraunces (serifada com curvas suaves) em tamanho ótico grande; o itálico marca a palavra-chave */
+  .letreiro { font-family: var(--font-serif); font-variation-settings: "opsz" 144; font-weight: 400; letter-spacing: -.025em; line-height: .98; text-wrap: balance; }
+  .titulo { font-family: var(--font-serif); font-variation-settings: "opsz" 144; font-weight: 400; letter-spacing: -.02em; line-height: 1.02; font-size: clamp(2.4rem, 5vw, 4.5rem); text-wrap: balance; }
+  .letreiro em, .titulo em { font-style: italic; font-weight: 350; }
+  /* rótulos e menu: Archivo em caixa alta, bem espaçada */
+  .etiqueta {
+    display: inline-flex; align-items: center; gap: .6em;
+    font-stretch: 105%; font-size: .75rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase;
+  }
+
+  .btn {
+    position: relative; display: inline-flex; align-items: center; justify-content: center; gap: .6em;
+    min-height: 52px; padding: 12px 24px; border-radius: 999px;
+    font-stretch: 104%; font-weight: 600; font-size: .9875rem; letter-spacing: .01em; text-decoration: none; text-align: center;
+    transition: background-color .25s, color .25s, box-shadow .3s, transform .25s var(--ease-solto);
+    cursor: pointer;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:active { transform: translateY(0) scale(.97); }
+  .btn-vermelho { background: var(--color-vermelho); color: #fff; box-shadow: 0 10px 26px -12px rgba(200, 38, 26, .8); }
+  .btn-vermelho:hover { background: #d93123; box-shadow: 0 16px 34px -14px rgba(200, 38, 26, .9); }
+  .btn-tinta { background: var(--color-tinta); color: var(--color-parede); box-shadow: 0 10px 26px -14px rgba(0,0,0,.7); }
+  .btn-tinta:hover { background: var(--color-vinho-escuro); }
+  .btn-claro { background: var(--color-papel); color: var(--color-tinta); box-shadow: 0 10px 30px -14px rgba(0,0,0,.55); }
+  .btn-claro:hover { background: #fff; }
+  .btn-contorno { background: transparent; color: currentColor; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 45%, transparent); }
+  .btn-contorno:hover { box-shadow: inset 0 0 0 1.5px currentColor; background: color-mix(in srgb, currentColor 7%, transparent); }
+
+  .sublinhado {
+    text-decoration: none; font-weight: 700;
+    background: linear-gradient(var(--color-brilho), var(--color-brilho)) 0 88% / 100% .32em no-repeat;
+    transition: background-size .3s var(--ease-solto);
+  }
+  .sublinhado:hover { background-size: 100% 88%; }
+
+  .foto { overflow: hidden; border-radius: 22px; background: var(--color-areia); }
+  .foto img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease-solto); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .btn:hover, .btn:active { transform: none; }
+  .foto img { transition: none; }
+}
